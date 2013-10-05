@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Box2D Performance Test</title>
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <style>
+
+  /* Application */
+body, html, canvas, #verold3d {
+  margin: 0 auto;
+  padding: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background: #000000;
+  background-image:url('http://assets.verold.com/production/images/logo_white.svg');
+  background-repeat:no-repeat;
+  background-attachment:fixed;
+  background-position:center;
+}
+
+/* NProgress */
+#nprogress { pointer-events: none; }
+#nprogress .bar { background: #009BDF; position: fixed; z-index: 100; top: 0; left: 0; width: 100%; height: 3px; }
+#nprogress .peg { display: block; position: absolute; right: 0px; width: 100px; height: 100%; box-shadow: 0 0 10px #009BDF, 0 0 5px #009BDF; opacity: 1.0; -webkit-transform: rotate(3deg) translate(0px, -4px); -ms-transform: rotate(3deg) translate(0px, -4px); transform: rotate(3deg) translate(0px, -4px); }
+
+/* Remove these to get rid of the spinner */
+#nprogress .spinner { display: block; position: fixed; z-index: 100; top: 15px; right: 15px; }
+#nprogress .spinner-icon { width: 18px; height: 18px; box-sizing: border-box; border: solid 2px transparent; border-top-color: #009BDF; border-left-color: #009BDF; border-radius: 50%; -webkit-animation: nprogress-spinner 400ms linear infinite; animation: nprogress-spinner 400ms linear infinite; }
+@-webkit-keyframes nprogress-spinner { 0%   { -webkit-transform: rotate(0deg); } 100% { -webkit-transform: rotate(360deg); }
+@keyframes nprogress-spinner { 0%   { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+
+  </style>
+</head>
+<body>
+
+    <div id="verold3d"></div>
+
+
+  <script>
+  function startApplication(VAPI) {
+    var $ = window.jQuery;
+
+
+      VAPI.progress.start();
+
+var DemoApplication = VAPI.VeroldApp.extend({
+  defaultSceneLoaded: function (scene) {
+    this.threeScene = scene.threeData;
+
+    var that = this;
+    scene.traverse(function(obj) {
+      if (obj.threeData instanceof THREE.Camera) {
+        that.threeCamera = obj.threeData;
+
+        obj.threeData.aspect = $(window).width() / $(window).height();
+        obj.threeData.updateProjectionMatrix();
+      }
+    });
+
+    VAPI.progress.done();
+  },
+
+  defaultSceneProgress: function(sceneObj) {
+    var loaded = Math.ceil(((sceneObj.loadingProgress.hierarchy + sceneObj.loadingProgress.dependencies) / sceneObj.getDataSize()) * 100) / 100;
+    VAPI.progress.set(loaded);
+  },
+
+  update: function(delta) {
+  },
+
+  render: function(delta) {
+    // Call this once per render to reset draw calls, vertices and
+    // faces
+    VAPI.resetRenderStats();
+
+    if (this.threeScene && this.threeCamera) {
+      var renderer = this.getRenderer();
+
+      renderer.render( this.threeScene, this.threeCamera );
+
+      // Call this after each call to renderer.render to track
+      // draw calls, vertices and faces
+      VAPI.addRenderStats(renderer);
+    }
+  }
+});
+
+var app = new DemoApplication({
+  el: '#verold3d',
+  projectId: '524da49395032a0200000539',
+  engineOptions: {
+  }
+});
+
+app.run();
+
+
+  }
+  </script>
+
+    <script src="http://assets.verold.com/verold_api/verold_api_v1.unstable.js"></script>
+
+    <script src="http://assets.verold.com/verold_api/lib/box2d.js"></script>
+
+    <script>
+
+      VAPI.addScript("524da544cf80cc02000004e5","Box2DRevoluteJoint",function(e){function t(){}return e("underscore"),t.prototype={constructor:t,init:function(){},objectCreated:function(){this.events.on("box2d_ready",this.box2DReady,this),this.veroldObject.on("body_ready",this.createJoint,this),this.connectedObject.on("body_ready",this.createJoint,this)},update:function(){},shutdown:function(){this.joint&&this.box2DWorldComponent.world.DestroyJoint(this.joint),this.events.off("box2d_ready",this.box2DReady,this),this.veroldObject.off("body_ready",this.createJoint,this),this.connectedObject.off("body_ready",this.createJoint,this)},box2DReady:function(e){this.box2DWorldComponent=e,this.createJoint()},createJoint:function(){var e,t,o,n=this.veroldObject.getComponentsByScriptName("Box2DBody")[0].body,i=this.connectedObject.getComponentsByScriptName("Box2DBody")[0].body;this.box2DWorldComponent&&n&&i&&!this.joint&&(e=n.GetPosition(),t=i.GetPosition(),o=new Box2D.b2RevoluteJointDef,o.set_bodyA(n),o.set_bodyB(i),o.set_localAnchorA(new Box2D.b2Vec2(this.localAnchor.x,this.localAnchor.y)),o.set_localAnchorB(new Box2D.b2Vec2(t.get_x()-e.get_x()+this.connectedLocalAnchor.x,t.get_y()-e.get_y()+this.connectedLocalAnchor.y)),o.set_collideConnected(this.collectConnected),o.set_lowerAngle(this.lowerAngle),o.set_upperAngle(this.upperAngle),o.set_enableLimit(this.enableLimit),o.set_maxMotorTorque(this.maxTorque),o.set_motorSpeed(this.motorSpeed),o.set_enableMotor(this.enableMotor),this.joint=this.box2DWorldComponent.world.CreateJoint(o))}},t},{enableMotor:{description:"","default":!1,type:"b"},maxTorque:{description:"","default":0,max:1e3,min:0,type:"f"},upperAngle:{description:"","default":3.141592653589793,max:3.141592653589793,min:-3.141592653589793,type:"f"},connectedLocalAnchor:{description:"","default":{y:0,x:0},max:{y:100,x:100},min:{y:-100,x:-100},type:"v2"},collideConnected:{description:"","default":!0,type:"b"},connectedObject:{type:"object",description:""},localAnchor:{type:"v2",min:{x:-100,y:100},max:{x:100,y:100},"default":{x:0,y:0},description:""},lowerAngle:{type:"f",min:-3.141592653589793,max:3.141592653589793,"default":-3.141592653589793,description:""},enableLimit:{type:"b","default":!1,description:""},motorSpeed:{type:"f",min:-1e3,max:1e3,"default":0,description:""}});
+
+      VAPI.addScript("524da544cf80cc02000004e6","Box2DDistanceJoint",function(t){function o(){}return t("underscore"),o.prototype={constructor:o,init:function(){},objectCreated:function(){this.events.on("box2d_ready",this.box2DReady,this),this.veroldObject.on("body_ready",this.createJoint,this),this.connectedObject.on("body_ready",this.createJoint,this)},update:function(){},shutdown:function(){this.joint&&this.box2DWorldComponent.world.DestroyJoint(this.joint),this.events.off("box2d_ready",this.box2DReady,this),this.veroldObject.off("body_ready",this.createJoint,this),this.connectedObject.off("body_ready",this.createJoint,this)},box2DReady:function(t){this.box2DWorldComponent=t,this.createJoint()},createJoint:function(){var t,o,e,n=this.veroldObject.getComponentsByScriptName("Box2DBody")[0].body,i=this.connectedObject.getComponentsByScriptName("Box2DBody")[0].body;this.box2DWorldComponent&&n&&i&&!this.joint&&(t=n.GetPosition(),o=i.GetPosition(),e=new Box2D.b2DistanceJointDef,e.Initialize(n,i,new Box2D.b2Vec2(t.get_x()+this.localAnchor.x,t.get_y()+this.localAnchor.y),new Box2D.b2Vec2(o.get_x()+this.connectedLocalAnchor.x,o.get_y()+this.connectedLocalAnchor.y)),e.set_collideConnected(this.collectConnected),this.joint=this.box2DWorldComponent.world.CreateJoint(e))}},o},{connectedLocalAnchor:{description:"","default":{y:0,x:0},max:{y:100,x:100},min:{y:-100,x:-100},type:"v2"},connectedObject:{description:"",type:"object"},collideConnected:{type:"b","default":!0,description:""},localAnchor:{type:"v2",min:{x:-100,y:-100},max:{x:100,y:100},"default":{x:0,y:0},description:""}});
+
+      VAPI.addScript("524da544cf80cc02000004e7","Box2DPrismaticJoint",function(t){function e(){}return t("underscore"),e.prototype={constructor:e,init:function(){},objectCreated:function(){this.events.on("box2d_ready",this.box2DReady,this),this.veroldObject.on("body_ready",this.createJoint,this),this.connectedObject.on("body_ready",this.createJoint,this)},update:function(){},shutdown:function(){this.joint&&this.box2DWorldComponent.world.DestroyJoint(this.joint),this.events.off("box2d_ready",this.box2DReady,this),this.veroldObject.off("body_ready",this.createJoint,this),this.connectedObject.off("body_ready",this.createJoint,this)},box2DReady:function(t){this.box2DWorldComponent=t,this.createJoint()},createJoint:function(){var t=this.veroldObject.getComponentsByScriptName("Box2DBody")[0].body,e=this.connectedObject.getComponentsByScriptName("Box2DBody")[0].body;if(this.box2DWorldComponent&&t&&e&&!this.joint){var o=new Box2D.b2PrismaticJointDef;o.Initialize(t,e,t.GetPosition(),new Box2D.b2Vec2(this.worldAxis.x,this.worldAxis.y)),o.set_collideConnected(this.collideConnected),o.set_lowerTranslation(this.lowerTranslation),o.set_upperTranslation(this.upperTranslation),o.set_enableLimit(this.enableLimit),o.set_maxMotorForce(this.maxMotorForce),o.set_motorSpeed(this.motorSpeed),o.set_enableMotor(this.enableMotor),this.joint=this.box2DWorldComponent.world.CreateJoint(o)}}},e},{enableMotor:{description:"","default":!0,type:"b"},maxMotorForce:{description:"","default":0,max:1e3,min:0,type:"f"},upperTranslation:{description:"","default":1,max:100,min:-100,type:"f"},collideConnected:{description:"","default":!0,type:"b"},connectedObject:{type:"object",description:""},lowerTranslation:{type:"f",min:-100,max:100,"default":-1,description:""},enableLimit:{type:"b","default":!0,description:""},motorSpeed:{type:"f",min:-100,max:100,"default":0,description:"Motor speed in units per second"},worldAxis:{type:"v2",min:{x:-1,y:-1},max:{x:1,y:1},"default":{x:0,y:1},description:""}});
+
+      VAPI.addScript("524da7fc61771a02000004bd","OrbitControls",function(e,t){function o(){this.ready=!1}var i=e("underscore"),n=1e-6,s=1800,a=new t.Vector2,r=new t.Vector2,h=new t.Vector2,d=new t.Vector2,u=new t.Vector2,c=new t.Vector2,l=0,m=0,p=1,f=new t.Vector3,v={NONE:-1,ROTATE:0,ZOOM:1,PAN:2},b=v.NONE;return o.prototype={constructor:o,init:function(){this.domElement=this.veroldObject.veroldEngine.renderController.renderer.domElement,this.enabled=this.enabled,this.center=new t.Vector3,this.userZoom=this.userZoom,this.userZoomSpeed=this.userZoomSpeed,this.userRotate=this.userRotate,this.userRotateSpeed=this.userRotateSpeed,this.userPan=this.userPan,this.userPanSpeed=this.userPanSpeed,this.autoRotate=this.autoRotate,this.autoRotateSpeed=this.autoRotateSpeed,this.minPolarAngle=this.minPolarAngle,this.maxPolarAngle=this.maxPolarAngle,this.minDistance=this.minDistance,this.maxDistance=this.maxDistance,this.distance=Math.min(this.maxDistance,Math.max(this.distance,this.minDistance)),this.onMouseDown=i.bind(function(e){this.enabled!==!1&&this.userRotate!==!1&&(e.preventDefault(),0===e.button?(b=v.ROTATE,a.set(e.clientX,e.clientY)):1===e.button?(b=v.ZOOM,d.set(e.clientX,e.clientY)):2===e.button&&(b=v.PAN),document.addEventListener("mousemove",this.onMouseMove,!1),document.addEventListener("mouseup",this.onMouseUp,!1))},this),this.onMouseMove=i.bind(function(e){if(this.enabled!==!1)if(e.preventDefault(),b===v.ROTATE)r.set(e.clientX,e.clientY),h.subVectors(r,a),this.rotateLeft(2*Math.PI*h.x/s*this.userRotateSpeed),this.rotateUp(2*Math.PI*h.y/s*this.userRotateSpeed),a.copy(r);else if(b===v.ZOOM)u.set(e.clientX,e.clientY),c.subVectors(u,d),c.y>0?this.zoomIn():this.zoomOut(),d.copy(u);else if(b===v.PAN){var o=e.movementX||e.mozMovementX||e.webkitMovementX||0,i=e.movementY||e.mozMovementY||e.webkitMovementY||0;this.pan(new t.Vector3(-o,i,0))}},this),this.onMouseUp=i.bind(function(){this.enabled!==!1&&this.userRotate!==!1&&(document.removeEventListener("mousemove",this.onMouseMove,!1),document.removeEventListener("mouseup",this.onMouseUp,!1),b=v.NONE)},this),this.onMouseWheel=i.bind(function(e){if(this.enabled!==!1&&this.userZoom!==!1){var t=0;e.wheelDelta?t=e.wheelDelta:e.detail&&(t=-e.detail),t>0?this.zoomOut():this.zoomIn()}},this),this.domElement.addEventListener("contextmenu",this.preventDefault,!1),this.domElement.addEventListener("mousedown",this.onMouseDown,!1),this.domElement.addEventListener("mousewheel",this.onMouseWheel,!1),this.domElement.addEventListener("DOMMouseScroll",this.onMouseWheel,!1)},objectCreated:function(){if(this.target&&this.target.id!==this.veroldObject.id){var e=this;this.veroldObject.listenToOnce(this.target,"load_base",function(){e.center=e.target.threeData.position,e.ready=!0})}else{var o=new t.Vector3(0,0,-this.distance);o.applyQuaternion(this.veroldObject.threeData.quaternion);var i=new t.Vector3;i.addVectors(this.veroldObject.threeData.position,o),this.center.set(i.x,i.y,i.z),this.ready=!0}},shutdown:function(){this.domElement.removeEventListener("contextmenu",this.preventDefault,!1),this.domElement.removeEventListener("mousedown",this.onMouseDown,!1),this.domElement.removeEventListener("mousewheel",this.onMouseWheel,!1),this.domElement.removeEventListener("DOMMouseScroll",this.onMouseWheel,!1)},update:function(){if(this.ready){var e=this.veroldObject.threeData.position,t=e.clone().sub(this.center),o=Math.atan2(t.x,t.z),i=Math.atan2(Math.sqrt(t.x*t.x+t.z*t.z),t.y);this.autoRotate&&this.rotateLeft(this.getAutoRotationAngle()),o+=m,i+=l,i=Math.max(this.minPolarAngle,Math.min(this.maxPolarAngle,i)),i=Math.max(n,Math.min(Math.PI-n,i));var s=t.length()*p;s=Math.max(this.minDistance,Math.min(this.maxDistance,s)),t.x=s*Math.sin(i)*Math.sin(o),t.y=s*Math.cos(i),t.z=s*Math.sin(i)*Math.cos(o),e.copy(this.center).add(t),this.veroldObject.threeData.lookAt(this.center),m=0,l=0,p=1,f.distanceTo(this.veroldObject.threeData.position)>0&&f.copy(this.veroldObject.threeData.position)}},rotateLeft:function(e){void 0===e&&(e=this.getAutoRotationAngle()),m-=e},rotateRight:function(e){void 0===e&&(e=this.getAutoRotationAngle()),m+=e},rotateUp:function(e){void 0===e&&(e=this.getAutoRotationAngle()),l-=e},rotateDown:function(e){void 0===e&&(e=this.getAutoRotationAngle()),l+=e},zoomIn:function(e){void 0===e&&(e=this.getZoomScale()),p/=e},zoomOut:function(e){void 0===e&&(e=this.getZoomScale()),p*=e},pan:function(e){e.transformDirection(this.veroldObject.threeData.matrix),e.multiplyScalar(this.userPanSpeed),this.veroldObject.threeData.position.add(e),this.center.add(e)},getAutoRotationAngle:function(){return 2*Math.PI/60/60*this.autoRotateSpeed},getZoomScale:function(){return Math.pow(.95,this.userZoomSpeed)},preventDefault:function(e){e.preventDefault()}},o},{target:{description:"The object that will be orbited. If not specified, the distance attribute will be used to select an orbit point",type:"object"},maxDistance:{description:"maximum camera distance","default":5,type:"f"},minDistance:{description:"minimum camera distance","default":.01,type:"f"},maxPolarAngle:{description:"maximum polar angle","default":3.141592653589793,type:"f"},minPolarAngle:{description:"minimum polar angle","default":0,type:"f"},autoRotateSpeed:{description:"speed of auto rotate","default":2,type:"f"},autoRotate:{description:"enable auto rotate?","default":!1,type:"b"},userPanSpeed:{description:"speed of user pan","default":.2,type:"f"},userPan:{description:"enable user pan?","default":!0,type:"b"},userRotateSpeed:{description:"speed of camera rotate","default":1,type:"f"},userRotate:{description:"enable camera rotate?","default":!0,type:"b"},userZoomSpeed:{description:"speed of camera zoom","default":1,type:"f"},userZoom:{description:"enable user zoom?","default":!0,type:"b"},enabled:{description:"enable camera controls?","default":!0,type:"b"},distance:{type:"f",min:0,max:1e4,"default":1,description:"The initial distance from the orbit target"}});
+
+      VAPI.addScript("524da544cf80cc02000004e3","Box2DWorld",function(){function t(){}return t.prototype={constructor:t,init:function(){var t=new Box2D.b2Vec2(this.gravity.x,this.gravity.y);this.world=new Box2D.b2World(t)},sceneLoaded:function(){this.events.trigger("box2d_ready",this),this.events.on("request_box2d_world",this.requestBox2DWorld,this)},update:function(t){this.world.Step(t,8,3)},requestBox2DWorld:function(t){t.trigger("box2d_world",this)},shutdown:function(){this.events.off("request_box2d_world",this.requestBox2DWorld,this)}},t},{gravity:{type:"v2",min:{x:-100,y:-100},max:{x:100,y:100},"default":{x:0,y:-10},description:""}});
+
+      VAPI.addScript("524da544cf80cc02000004e4","Box2DBody",function(t,e){function i(){}var o=t("underscore"),s=new e.Euler,n=new e.Vector3;return i.prototype={constructor:i,init:function(){this.rotation=new e.Vector3(1,1,1),this.rotation[this.xMapping]=0,this.rotation[this.yMapping]=0},objectCreated:function(){this.events.once("box2d_ready",this.box2DReady,this),this.veroldObject.on("box2d_world",this.box2DReady,this),this.events.trigger("request_box2d_world",this.veroldObject,this)},update:function(){if(this.body){var t={},e=this.body.GetPosition();t.x=e.get_x(),t.y=e.get_y(),t.angle=this.body.GetAngle(),this.veroldObject.threeData.position[this.xMapping]=t.x,this.veroldObject.threeData.position[this.yMapping]=t.y,n.copy(this.rotation),n.multiplyScalar(t.angle),s.set(n.x,n.y,n.z),this.veroldObject.threeData.quaternion.setFromEuler(s)}},shutdown:function(){this.events.off("box2d_ready",this.box2DReady,this)},box2DReady:function(t){this.box2DWorldComponent=t;var e=new Box2D.b2BodyDef;switch(this.type){case"static":e.set_type(Box2D.b2_staticBody);break;case"kinematic":e.set_type(Box2D.b2_kinematicBody);break;case"dynamic":default:e.set_type(Box2D.b2_dynamicBody)}var i=this.body=t.world.CreateBody(e);o.each(this.fixtures,function(t){var e,o=new Box2D.b2FixtureDef;switch(o.set_friction(t.friction||.5),o.set_restitution(t.restitution||.5),o.set_density(t.density||1),t.shape){case"circle":e=new Box2D.b2CircleShape,e.set_m_radius(t.radius);break;case"box":e=new Box2D.b2PolygonShape,e.SetAsBox(t.halfExtents.x,t.halfExtents.y);break;case"edge":e=new Box2D.b2EdgeShape,e.Set(new Box2D.b2Vec2(t.v1.x,t.v1.y),new Box2D.b2Vec2(t.v2.x,t.v2.y))}e&&(o.set_shape(e),i.CreateFixture(o))});var s=new Box2D.b2Vec2(this.veroldObject.threeData.position[this.xMapping],this.veroldObject.threeData.position[this.yMapping]);i.SetTransform(s,0),i.SetAwake(1),i.SetActive(1),this.veroldObject.trigger("body_ready")}},i},{xMapping:{description:"","default":"x",options:{z:"z",y:"y",x:"x"},type:"dd"},type:{description:"Box2D body type","default":"Dynamic",options:{Kinematic:"kinematic",Static:"static",Dynamic:"dynamic"},type:"dd"},fixtures:{type:"a",subType:{type:"json","default":{shape:"circle",radius:5,position:{x:0,y:0}}},description:'The shape of the object.\n\neg: \n{  "shape": "circle", '},yMapping:{type:"dd",options:{x:"x",y:"y",z:"z"},"default":"y",description:""}});
+
+      VAPI.addScript("524da89d95032a0200000554","Spawner",function(t){function e(){}var i=t("underscore");return e.prototype={constructor:e,init:function(){this.templateObject.on("body_ready",this.setupTemplate,this),this.lastSpawn=0,this.time=0,this.objects=0,window.VAPI.addWatch("Objects",i.bind(function(){return this.objects+" of "+this.nObjects},this))},setupTemplate:function(){this.bodyComponent=this.templateObject.getComponentsByScriptName("Box2DBody")[0],this.bodyComponent.body.SetActive(!1)},update:function(t){this.time+=t,this.objects<this.nObjects&&this.bodyComponent&&this.time-this.interval>this.lastSpawn&&(this.objects++,this.lastSpawn=this.time,this.spawn())},spawn:function(){this.templateObject.clone({success:i.bind(function(t){this.veroldObject.getParentAsset().addChildObject(t);var e=t.getComponentsByScriptName("Box2DBody")[0];t.once("body_ready",function(){e.body.SetActive(!0)},this)},this)})},shutdown:function(){}},e},{interval:{description:"","default":1,max:60,min:.0166666,type:"f"},templateObject:{type:"object",description:""},nObjects:{type:"i",min:1,max:1e4,"default":100,description:""}});
+
+    startApplication(window.VAPI);
+    </script>
+
+  </script>
+</body>
+</html>
